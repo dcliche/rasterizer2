@@ -416,6 +416,8 @@ void enemy_line(ivec3_t enemy, ivec3_t pos, imat4x4_t mvp, int32_t len, uint8_t*
     for(int i = FLOAT_FIXED(0.04); i < len + FLOAT_FIXED(0.04); i += FLOAT_FIXED(0.005)) {
         int32_t px = FIXED_INT_ROUND(VIEWPORT_NO_PERSPECTIVE(imul(dir_norm.x, i), SCREEN_WIDTH));
         int32_t py = FIXED_INT_ROUND(VIEWPORT_NO_PERSPECTIVE(imul(imul(dir_norm.y, i), aspect), SCREEN_HEIGHT));
+        if (px < 0) px = 0;
+        if (py < 0) py = 0;
         framebuffer[px + py * SCREEN_WIDTH] = color;
     }
 
@@ -427,6 +429,8 @@ void enemy_line(ivec3_t enemy, ivec3_t pos, imat4x4_t mvp, int32_t len, uint8_t*
         ivec3_t dir_norm_ortho = ivec3(dir_norm.y, -dir_norm.x, 0.0);
         px = FIXED_INT_ROUND(VIEWPORT_NO_PERSPECTIVE(px + imul(dir_norm_ortho.x, i), SCREEN_WIDTH));
         py = FIXED_INT_ROUND(VIEWPORT_NO_PERSPECTIVE(imul(py + imul(dir_norm_ortho.y, i), aspect), SCREEN_HEIGHT));
+        if (px < 0) px = 0;
+        if (py < 0) py = 0;
         framebuffer[px + py * SCREEN_WIDTH] = color;
     }
 }
