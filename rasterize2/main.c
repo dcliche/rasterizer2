@@ -35,8 +35,6 @@
 
 #include "text/font8x8_basic.h"
 
-#include <bass.h>
-
 uint8_t cyber_cols[8] = {
     RGB332(255, 71,  254),
     RGB332(255, 116, 254),
@@ -98,9 +96,6 @@ int32_t from_menu;
 int32_t transition_state;
 int32_t have_transitioned;
 int32_t debug_mode = 0;
-
-HSTREAM music;
-HSTREAM sounds[10];
 
 // Text boxies
 char** active_dialog;
@@ -192,15 +187,6 @@ double nanotime() {
     return((double)curtime.tv_sec + 1.0e-9 * curtime.tv_nsec);
 }
 #endif
-
-// Play music
-void change_music(const char* path) {
-    if(music != 0) {
-        BASS_ChannelStop(music);
-    }
-    music = BASS_StreamCreateFile(0, path, 0, 0, BASS_STREAM_PRESCAN);
-    BASS_ChannelPlay(music, 0);
-}
 
 // Start a dialog
 void start_dialog(char** dialog) {
@@ -541,9 +527,6 @@ void core_onupdate(double elapsed, double alltime) {
 
 // Load the "core" level
 void load_level_core() {
-    // Change music
-    change_music("data/core.ogg");
-
     // Maximum enemies for this stage
     stage_enemies_max = 16;
     if(debug_mode) {
@@ -626,9 +609,6 @@ void ringworld_onwin() {
 
 // Load the "ringworld" level
 void load_level_ringworld() {
-    // Change music
-    change_music("data/rings.ogg");
-
     // Reset textures
     free_textures();
 
@@ -696,9 +676,6 @@ void city_onwin() {
 
 // Load the "city" level
 void load_level_city() {
-    // Change music
-    change_music("data/city.ogg");
-
     // Maximum enemies for this stage
     stage_enemies_max = 4;
     if(debug_mode) {
@@ -861,7 +838,6 @@ void run_game(double elapsed) {
             enemies[i].charge = 0;
             enemies[i].charging = 0;
             player_health -= 1;
-            BASS_ChannelPlay(sounds[1], 1);
             player_shake = INT_FIXED(5);
 
             for(int i = 0; i < ENEMY_MAX; i++) {
@@ -959,7 +935,6 @@ void run_game(double elapsed) {
     if(keys['m'] && player_charge >= FLOAT_FIXED(0.1)) {
         player_charge = 0;
         player_shot = 1;
-        BASS_ChannelPlay(sounds[0], 1);
     }
 
     // Recalculate projection
@@ -1018,7 +993,6 @@ void run_game(double elapsed) {
         ypower = 0;
         speed = 1.0;
 
-        BASS_ChannelPlay(sounds[1], 1);
 
         player_shake = INT_FIXED(5);
 
@@ -1052,7 +1026,6 @@ void run_game(double elapsed) {
             if(player_shot && enemies[hit_enemy].active == 1) {
                 enemies[hit_enemy].active = 0;
                 enemies_alive--;
-                BASS_ChannelPlay(sounds[1], 1);
             }
         }
     }
@@ -1127,7 +1100,6 @@ void run_game(double elapsed) {
         if(active_dialog[dialog_pos] != 0) {
             if(active_dialog[dialog_pos][0] == '*') {
                 menu_mode = 1;
-                change_music("data/cyber.ogg");
                 dialog_mode = 0;
                 dialog_pos++;
                 return;
@@ -1182,11 +1154,6 @@ void main_loop(void) {
     double thistime = nanotime();
     double elapsed = thistime - lasttime;
     lasttime = thistime;
-
-    // Restart music
-    if(!BASS_ChannelIsActive(music)) {
-        BASS_ChannelPlay(music, 1);
-    }
 
     // Draw
     if(!menu_mode) {
@@ -1318,6 +1285,9 @@ void keyboardup(unsigned char key, int x, int y) {
     keys[key] = 0;
 }
 
+void display(void) {
+}
+
 // Entry point
 int main(int argc, char **argv) {
 
@@ -1340,17 +1310,7 @@ int main(int argc, char **argv) {
     glutKeyboardUpFunc(keyboardup);
     glutSetCursor(GLUT_CURSOR_NONE); 
     glutIdleFunc(main_loop);
-    
-    // Sound
-    BASS_Init(-1, 44100, 0, 0, 0);
-    BASS_Start();
-
-    // Music!
-    music = 0;
-    change_music("data/cyber.ogg");
-
-    sounds[0] = BASS_StreamCreateFile(0, "data/fwup.ogg", 0, 0, BASS_STREAM_PRESCAN);
-    sounds[1] = BASS_StreamCreateFile(0, "data/bwoom.ogg", 0, 0, BASS_STREAM_PRESCAN);
+    glutDisplayFunc(display);
 
     // Set up projection
     projection = imat4x4perspective(INT_FIXED(45), idiv(INT_FIXED(SCREEN_WIDTH), INT_FIXED(SCREEN_HEIGHT)), ZNEAR, ZFAR);
