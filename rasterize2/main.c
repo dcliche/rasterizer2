@@ -386,19 +386,25 @@ ivec3_t random_arena_point() {
 
 // Returns a random point that can be reached from another random point without crashing
 ivec3_t random_reachable_point(ivec3_t origin, int32_t ignore_model) {
-    ivec3_t point = ivec3(-1, -1, -1);
+    ivec3_t point;
     int32_t hit = 1;
+    int32_t remaining_trials = 3;
     ivec3_t hit_pos;
     int32_t hit_model;
-    while(hit == 1) {
+    while(hit == 1 && remaining_trials > 0) {
         point = random_arena_point();
 
         ivec3_t diff = ivec3sub(origin, point);
         if(ivec3dot(diff, diff) > FLOAT_FIXED(0.1)) {
             hit = raytrace(origin, ivec3sub(point, origin), &hit_pos, &hit_model, ignore_model);
         }
+        remaining_trials--;
     }
-    return point;
+    if (hit == 0)
+        return point;
+
+    // Unable to find a point
+    return origin;
 }
 
 // Draw a line towards an enemy
